@@ -29,8 +29,9 @@ for line in batch:
     search = 'Q' + str(q_number) + ' '
     searchObj = re.search(search, line, re.M | re.I)
     if searchObj:
-        q_type = line[4: -2]
-        q_tag = soup.new_tag("q", id=str(q_number), type = q_type , misspelled="", corrected="", replaced="")
+        #q_type = line[4: -2]
+        q_type = (line.partition("(")[2]).partition(")")[0]
+        q_tag = soup.new_tag("q", id=str(q_number-1), type=q_type, misspelled="", corrected="", replaced="")
         text_tag.append(q_tag)
         q_number += 1   # adds to the question number
         get_text = 0    # deactivates the get text
@@ -44,12 +45,7 @@ for line in batch:
         answer_tag = soup.new_tag("body")
         a_text = line[4:-1]  # find the text for the answers
         # assign the answers to their respective position with k
-        if k == 0:   # making tags for the respective answers
-            answer_tag = soup.new_tag('A', correct="")
-        elif k == 1:
-            answer_tag = soup.new_tag("B", correct="")
-        else:
-            answer_tag = soup.new_tag("C", correct="")
+        answer_tag = soup.new_tag('a', id=k, correct="")
         q_tag.append(answer_tag)
         answer_tag.append(a_text) # addinf the text of the answer
         q_reader = 0 # deactivates the question reader

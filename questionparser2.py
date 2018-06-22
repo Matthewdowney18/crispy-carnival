@@ -58,5 +58,6 @@ for line in batch:
             text[name]['questions'][question]['answers']['C'] = a_text
         k += 1
 
-with open("addedquestions.json", "w") as f:
-    json.dump(text, f)
+print(text)
+#with open("addedquestions.json", "w") as f:
+   # json.dump(text, f)
