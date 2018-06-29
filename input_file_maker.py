@@ -1,5 +1,6 @@
 import pandas as pd
 from bs4 import BeautifulSoup
+from random import shuffle
 
 
 def get_columns(q_num, a_num):
@@ -11,10 +12,25 @@ def get_columns(q_num, a_num):
     '''
     c = ['text']
     for k in range(1, q_num +1):
+        c.append('Q' + str(k)+' id')
         c.append(('Q' + str(k)))
         for l in range(1, a_num + 1):
+            c.append('id')
             c.append(('Q'+str(k)+'_'+str(l)))
     return c
+
+
+def get_rand_questions(questions, soup, types):
+    list = []
+    types = types+types
+    for q in questions:
+        answer_tag = soup.new_tag('a', id=3, correct="")
+        q.append(answer_tag)
+        answer_tag.append('unanswerable')  # addinf the text of the answer
+        list.append(q)
+    shuffle(list)
+    shuffle(types)
+    return list, types
 
 
 def make_dictionary_list(soup, columns, types):
@@ -25,7 +41,7 @@ def make_dictionary_list(soup, columns, types):
     :param types: list of types for the data
     :return: returns the list of dictionaried
     '''
-    text = soup.find_all('text')
+    text = soup.find_all('Text')
     dictionaries = []
     for t in text:
         i = 0
@@ -33,22 +49,27 @@ def make_dictionary_list(soup, columns, types):
         # adding the text
         text_info[columns[i]] = t.find('body').text.strip()
         i += 1
-        for type in types:
-            questions = t.find_all('q')
-            for q in questions:
-                j = 0
-                if q["type"] == type and j < 2:
-                    j+=1
-                    # find the tags with the attributes and get the text
-                    # add the text of the question
-                    text_info[columns[i]] = q.text.splitlines()[1].strip()
-                    i+=1
-                    answers = q.find_all('a')
-                    # add the answers(already randomized
+        questions = t.find_all('q')
+        rand_questions, rand_types = get_rand_questions(questions, soup, types)
+
+        for type in rand_types:
+            for question in rand_questions:
+                if question["type"] == type:
+                    text_info[columns[i]] = question["id"]
+                    i += 1
+                    text_info[columns[i]] = question.text.splitlines()[1].strip()
+                    i += 1
+                    rand_questions.remove(question)
+                    answers = question.find_all('a')
+                    shuffle(answers)
                     for a in answers:
-                        # need to clean text as well
+                        # the answer id does not work yet
+                        text_info[columns[i]] = a["id"]
+                        i += 1
+
                         text_info[columns[i]] = a.text.strip()
                         i += 1
+                    break
         dictionaries.append(text_info)
     return dictionaries
 
@@ -73,10 +94,10 @@ def main():
     output questions and answers on a quiz
     '''
     # opening the files
-    with open('batch2(randomized)') as contents:
+    with open('batch2(spellchecked)(first added)') as contents:
         xml_data = BeautifulSoup(contents, "xml")
 
-    with open('batch2(randomized)') as contents:
+    with open('batch3(spellchecked)(first added)') as contents:
         xml_data.append(BeautifulSoup(contents, "xml").corpus)
 
     # creating the colums header
@@ -87,16 +108,8 @@ def main():
     output = make_dictionary_list(xml_data, columns, types)
 
     table = pd.DataFrame.from_records(output, columns = columns)
+    print(table)
     table.to_csv(path_or_buf='input_file.csv')
 
 
 main()
-
-def myfunction(arg1, arg2):
-    '''
-
-    :param arg1:
-    :param arg2:
-    :return:
-    '''
-    pass
